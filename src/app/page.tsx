@@ -59,11 +59,7 @@ export default async function Home() {
         {/* Background glow */}
         <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[36rem] -translate-x-1/2 rounded-full bg-violet-600/15 blur-3xl" />
 
-        <div style={ {
-          display: "flex",
-          flexWrap: "wrap",
-        }
-        } className="relative grid gap-8 p-6 sm:p-10 lg:grid-cols-[1fr_auto] lg:gap-12">
+        <div className="relative lg:grid gap-8 p-6 sm:p-10 lg:grid-cols-[1fr_auto] lg:gap-12 flex flex-wrap">
           {/* Left — copy */}
           <div className="flex flex-col justify-center">
             <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-300">
