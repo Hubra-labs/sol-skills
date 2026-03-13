@@ -10,16 +10,16 @@
     "bubblegum",
     "umi"
   ],
-  "author": "sendaifun",
-  "repository": "sendaifun/skills",
+  "author": "metaplex-foundation",
+  "repository": "metaplex-foundation/skill",
   "links": [
     {
       "label": "Source folder",
-      "href": "https://github.com/sendaifun/skills/tree/main/skills/metaplex"
+      "href": "https://github.com/metaplex-foundation/skill/tree/main/skills/metaplex"
     },
     {
       "label": "Source skill",
-      "href": "https://raw.githubusercontent.com/sendaifun/skills/main/skills/metaplex/SKILL.md"
+      "href": "https://raw.githubusercontent.com/metaplex-foundation/skill/main/skills/metaplex/SKILL.md"
     }
   ],
   "guide": {
