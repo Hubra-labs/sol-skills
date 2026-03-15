@@ -10,16 +10,16 @@
     "cli",
     "sdk"
   ],
-  "author": "sendaifun",
-  "repository": "sendaifun/skills",
+  "author": "GLAM",
+  "repository": "glamsystems/glam-skill",
   "links": [
     {
       "label": "Source folder",
-      "href": "https://github.com/sendaifun/skills/tree/main/skills/glam"
+      "href": "https://github.com/glamsystems/glam-skill"
     },
     {
       "label": "Source skill",
-      "href": "https://raw.githubusercontent.com/sendaifun/skills/main/skills/glam/SKILL.md"
+      "href": "https://raw.githubusercontent.com/glamsystems/glam-skill/refs/heads/main/SKILL.md"
     }
   ],
   "guide": {
