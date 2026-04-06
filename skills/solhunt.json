@@ -1,0 +1,82 @@
+{
+  "slug": "solhunt",
+  "title": "SolHunt — Solana Wallet Recovery Intelligence",
+  "summary": "Find and recover SOL trapped in zero-balance token accounts. Revoke dangerous dApp approvals. Full wallet audit in one tool call — trustless, unsigned transactions only.",
+  "level": "intermediate",
+  "tags": [
+    "solana",
+    "wallet",
+    "recovery",
+    "defi",
+    "security",
+    "agent",
+    "mcp"
+  ],
+  "author": "solhunt",
+  "installs": 0,
+  "publisherVerified": true,
+  "repository": "https://github.com/shieldspprt/solhunt-recovery",
+  "links": [
+    {
+      "label": "MCP Server",
+      "href": "https://solhunt.dev/.netlify/functions/mcp"
+    },
+    {
+      "label": "Web App",
+      "href": "https://solhunt.dev"
+    },
+    {
+      "label": "GitHub",
+      "href": "https://github.com/shieldspprt/solhunt-recovery"
+    },
+    {
+      "label": "Docs",
+      "href": "https://docs.solhunt.dev"
+    }
+  ],
+  "guide": {
+    "markdown": "# SolHunt — Solana Wallet Recovery Intelligence\n\n## When to Apply\n- A Solana wallet has low health or lost SOL locked in closed token accounts\n- An agent needs to audit a wallet's security posture (token approvals)\n- Recoverable rent is sitting in zero-balance accounts (0.002039 SOL each)\n- User wants a full wallet report before committing to recovery\n\n## Trust Model — Why SolHunt Cannot Drain Your Wallet\n\n1. **Unsigned transactions only** — SolHunt returns raw transaction bytes. The agent signs locally. SolHunt never sees the signed transaction.\n2. **Instruction-level isolation** — Recovery transactions contain ONLY `CloseAccount` + 15% fee transfer. No generic transfers.\n3. **Atomic bundling** — Fee and recovery are in the same transaction. Fee only paid on success.\n4. **No persistent authority** — SolHunt never requests `Approve`, `Delegate`, or any persistent permission.\n\n## Recovery Flow\n\n```\n1. get_wallet_report        ← Full wallet analysis (health score, recoverable SOL, fee preview)\n2. build_recovery_transaction  ← Build unsigned tx bytes\n3. Agent signs locally      ← User/agent provides the signature  \n4. Agent submits to RPC     ← Any Solana RPC or bundle\n```\n\n## Security Audit Flow\n\n```\n1. scan_token_approvals     ← Find all dApp spending rights\n2. build_revoke_transactions ← Build unsigned revocation txs\n3. Agent signs locally\n```\n\n## Tool Reference\n\n### get_wallet_report\nFull wallet analysis. Always start here.\n\n**Input:** `{ \"wallet_address\": \"7nxJ...x8Lp\" }`\n\n**Output:** health score, grade, recoverable_sol, fee_sol (15%), net_recoverable_sol, worth_recovering (boolean)\n\n**Decision:** If `worth_recovering` is true (net > 0.001 SOL), proceed to `build_recovery_transaction`.\n\n---\n\n### build_recovery_transaction\nBuild unsigned Solana transaction bytes to close zero-balance accounts and recover rent.\n\n**Input:** `{ \"wallet_address\": \"...\", \"destination_wallet\": \"...\", \"batch_number\": 1 }`\n\n**Output:** `{ \"unsigned_transaction\": \"base64...\", \"expires_at\": \"...\" }`\n\n**⚠️ Critical:** Transactions expire in ~90 seconds. Sign and submit immediately.\n\n---\n\n### scan_token_approvals\nFind all dApps with permission to move the wallet's tokens.\n\n**Output:** approvals by risk level (HIGH/MEDIUM/LOW), exposed value, dApp list\n\n**Decision:** Any HIGH risk approvals should be revoked before recovery.\n\n---\n\n### build_revoke_transactions\nBuild unsigned transaction to revoke dApp token approvals.\n\n**Safety:** Revoking only removes permissions. It never moves funds.\n\n---\n\n## Fees\n\n- **Scan / Report:** Free (10 calls/day free tier)\n- **Recovery fee:** 15% of recovered SOL (only on success)\n- **Revoke fee:** 0.001 SOL per transaction\n\n## Failure Handling\n\n| Failure | Mitigation |\n|---------|------------|\n| `INVALID_PARAMS` | Validate base58, 32-44 chars before calling |\n| `WALLET_NOT_FOUND` | Wallet has no on-chain history |\n| `RATE_LIMITED` (429) | Check `X-RateLimit-Reset`, retry after |\n| Stale blockhash | Call `build_recovery_transaction` again for fresh bytes |\n| Zero closeable accounts | Wallet is clean, no recovery needed |\n",
+    "executionFlow": [
+      {
+        "title": "Full recovery session",
+        "content": "1. Call get_wallet_report with wallet address\n2. If worth_recovering is true, call build_recovery_transaction\n3. Sign the base64 transaction bytes locally with the wallet\n4. Submit the signed transaction to any Solana RPC\n5. Repeat for subsequent batches if closeable_accounts > 15"
+      },
+      {
+        "title": "Security audit session",
+        "content": "1. Call scan_token_approvals with wallet address\n2. Inspect risk_breakdown — any HIGH risk approvals?\n3. Call build_revoke_transactions with the HIGH risk token accounts\n4. Sign and submit the revocation transaction"
+      }
+    ],
+    "landingGuidance": [
+      {
+        "title": "Transaction expiry",
+        "content": "Recovery transactions expire in ~90 seconds. Build the transaction only when ready to sign immediately. If expired, call build_recovery_transaction again for fresh bytes."
+      },
+      {
+        "title": "Batch strategy",
+        "content": "Each Solana transaction can close ~15 accounts (1500 CUs each). For wallets with many zero-balance accounts, repeat build_recovery_transaction with incrementing batch_number until all accounts are closed."
+      },
+      {
+        "title": "RPC submission",
+        "content": "Any Solana RPC works: Helius, QuickNode, Triton, or the default public RPC. For best reliability, use Helius or QuickNode with priority fee support."
+      }
+    ],
+    "failureHandling": [
+      {
+        "title": "Wallet not found",
+        "content": "The wallet has never made any on-chain transactions. Use a wallet with history."
+      },
+      {
+        "title": "Rate limited (429)",
+        "content": "Free tier is 10 calls/day. Check X-RateLimit-Reset header for reset time, or obtain an API key from solhunt.dev for higher limits."
+      },
+      {
+        "title": "Stale blockhash / tx expired",
+        "content": "Simply call build_recovery_transaction again. Each call generates fresh bytes with a current blockhash."
+      },
+      {
+        "title": "No recoverable accounts",
+        "content": "The wallet has no zero-balance token accounts. Nothing to recover. Use this wallet if it has activity but no dust."
+      }
+    ]
+  }
+}
