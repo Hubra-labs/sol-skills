@@ -1,0 +1,40 @@
+{
+  "slug": "asterpay-kya",
+  "title": "AsterPay KYA — Agent Trust Score & EUR Settlement",
+  "summary": "Know Your Agent (KYA) trust scoring, sanctions screening, and USDC-to-EUR settlement via SEPA Instant. Score any wallet 0-100, check ERC-8004 identity, screen sanctions (Chainalysis), and settle stablecoins to EUR bank accounts. x402-native, MiCA-compliant.",
+  "level": "intermediate",
+  "tags": ["payments", "trust", "x402", "compliance", "settlement", "agents", "EUR", "SEPA"],
+  "author": "AsterPay",
+  "publisherVerified": false,
+  "repository": "AsterPay/asterpay-skills",
+  "links": [
+    { "label": "GitHub Skills Repo", "href": "https://github.com/AsterPay/asterpay-skills" },
+    { "label": "API (Live)", "href": "https://x402.asterpay.io" },
+    { "label": "Documentation", "href": "https://asterpay.io/docs" },
+    { "label": "EAS Attestation (Base)", "href": "https://base.easscan.org/schema/view/0x34d8d84158b4d965687d5a4585b2e437f381371fa935c225e8a128ca57c675ca" },
+    { "label": "x402 Foundation", "href": "https://x402.org/ecosystem" }
+  ],
+  "guide": {
+    "markdown": "# AsterPay KYA — Agent Trust Score & EUR Settlement\n\nAsterPay is the trust and settlement layer for AI agent commerce. Two core capabilities:\n\n1. **KYA Trust Score** — Score any wallet 0-100 based on 7 on-chain signals + Chainalysis sanctions screening + InsumerAPI attestations. Free API, no key needed.\n2. **EUR Settlement** — Convert USDC/EURC/EURCV to EUR via SEPA Instant (<10 seconds). x402-native, MiCA-compliant.\n\nListed on x402 Foundation ecosystem. Circle Alliance member. ERC-8004 Agent #16850.\n\n## Base URL\n\n```\nhttps://x402.asterpay.io\n```\n\n## KYA Trust Score (FREE — No Auth Required)\n\n### GET /v1/agent/trust-score/:address\n\nFull trust assessment for any Ethereum-compatible address.\n\n```bash\ncurl https://x402.asterpay.io/v1/agent/trust-score/0x742d35Cc6634C0532925a3b844Bc454e4438f44e\n```\n\nResponse:\n```json\n{\n  \"score\": 65,\n  \"tier\": \"trusted\",\n  \"maxPerTx\": 10000,\n  \"blocked\": false,\n  \"components\": {\n    \"walletAge\": 12,\n    \"walletActivity\": 10,\n    \"sanctionsClean\": 20,\n    \"erc8004Identity\": 15,\n    \"operatorKyb\": 0,\n    \"transactionHistory\": 5,\n    \"trustBond\": 3\n  },\n  \"sanctions\": { \"clean\": true, \"provider\": \"chainalysis\" }\n}\n```\n\n### GET /v1/agent/verify/:address\nERC-8004 identity check.\n\n### GET /v1/agent/tier/:address\nFast tier + limits lookup.\n\n### POST /v1/agent/trust-score/batch\nBatch scoring up to 50 addresses.\n\n## Trust Tiers\n\n| Tier | Score | Max/Tx | Daily Limit |\n|------|-------|--------|-------------|\n| Open | 0-19 | $1 | $10 |\n| Verified | 20-49 | $1,000 | $5,000 |\n| Trusted | 50-79 | $10,000 | $50,000 |\n| Enterprise | 80-100 | Unlimited | Unlimited |\n\n## EAS On-Chain Attestation (Base Mainnet)\n\nKYA Trust Scores are attested on-chain via Ethereum Attestation Service (EAS) on Base:\n- Schema: 12 fields, gas-optimized (<$0.01 per attestation)\n- Schema UID: `0x34d8d84158b4d965687d5a4585b2e437f381371fa935c225e8a128ca57c675ca`\n- Any smart contract can read an agent's trust profile directly from the chain.\n\n## EUR Settlement (x402 Facilitator)\n\n### GET /v1/settlement/estimate\n```bash\ncurl \"https://x402.asterpay.io/v1/settlement/estimate?amount=100.0&currency=USDC\"\n```\nReturns EUR amount, fees, exchange rate.\n\n### POST /v2/x402/verify + POST /v2/x402/settle\nx402 v2 facilitator — verify payment signature, settle on-chain, trigger EUR SEPA payout.\n\n## Usage Pattern: Trust-Gated Transaction\n\n```typescript\nconst BASE = 'https://x402.asterpay.io';\n\n// 1. Check trust before transacting\nconst { data } = await fetch(`${BASE}/v1/agent/trust-score/${address}`).then(r => r.json());\n\nif (data.blocked) throw new Error('Sanctioned wallet');\nif (data.score < 20) throw new Error('Trust too low');\n\n// 2. Estimate EUR settlement\nconst est = await fetch(`${BASE}/v1/settlement/estimate?amount=100`).then(r => r.json());\nconsole.log(`100 USDC → ${est.data.netEurAmount} EUR`);\n```\n\n## Supported Chains\n\nBase (primary), Ethereum, Polygon, Arbitrum, Optimism, Solana, XRPL.\n\n## Rules\n\n- NEVER trust a wallet with `blocked: true` — sanctions compliance block.\n- ALWAYS check `sanctions.clean` before transacting with unknown agents.\n- Cache trust scores for 5 minutes.\n- Default to Base network for lowest fees.\n- For >$1,000 transactions, use deep analysis endpoint ($0.01 via x402).",
+    "executionFlow": [
+      {
+        "title": "1. Check Agent Trust",
+        "content": "```typescript\nconst res = await fetch('https://x402.asterpay.io/v1/agent/trust-score/' + address);\nconst { data } = await res.json();\n// data.score (0-100), data.tier, data.blocked, data.sanctions.clean\n```"
+      },
+      {
+        "title": "2. Verify Identity",
+        "content": "```typescript\nconst res = await fetch('https://x402.asterpay.io/v1/agent/verify/' + address);\nconst { data } = await res.json();\n// data.verified, data.agentId (#16850), data.registry\n```"
+      },
+      {
+        "title": "3. Estimate EUR Settlement",
+        "content": "```typescript\nconst res = await fetch('https://x402.asterpay.io/v1/settlement/estimate?amount=100');\nconst { data } = await res.json();\n// data.netEurAmount, data.eurRate, data.asterpayFeeEur\n```"
+      }
+    ],
+    "failureHandling": [
+      {
+        "title": "Common errors",
+        "content": "- 402: Payment required (for paid endpoints like deep-analysis)\n- blocked: true → Sanctioned wallet, do NOT transact\n- simulated: true → Expected for estimates, actual settlement via facilitator"
+      }
+    ]
+  }
+}
