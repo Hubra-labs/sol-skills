@@ -120,6 +120,21 @@ export default function RootLayout({
           </div>
         </header>
         {children}
+        <footer className="mt-16 border-t border-zinc-900/80">
+          <div className="mx-auto flex w-full items-center justify-center px-6 py-6 text-xs text-zinc-500">
+            <span>
+              Built by{" "}
+              <a
+                href="https://hubra.app"
+                target="_blank"
+                rel="noopener"
+                className="text-zinc-300 underline-offset-4 transition hover:text-violet-400 hover:underline"
+              >
+                Hubra team
+              </a>
+            </span>
+          </div>
+        </footer>
         <Analytics />
       </body>
     </html>
