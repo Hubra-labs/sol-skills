@@ -1,0 +1,55 @@
+{
+  "slug": "groundtruth",
+  "title": "GROUNDTRUTH memecoin records",
+  "summary": "Check the record before an agent buys a Solana memecoin: what happened to a launch, the track record of the wallet that launched it, and a known-bad creator flag with its statistical basis.",
+  "level": "intermediate",
+  "tags": [
+    "memecoins",
+    "pumpfun",
+    "risk",
+    "mcp",
+    "x402",
+    "data"
+  ],
+  "author": "groundtruth-now",
+  "repository": "groundtruth-now/groundtruth-mcp",
+  "links": [
+    {
+      "label": "GitHub repository",
+      "href": "https://github.com/groundtruth-now/groundtruth-mcp"
+    },
+    {
+      "label": "Skill source",
+      "href": "https://raw.githubusercontent.com/groundtruth-now/groundtruth-mcp/main/skill.md"
+    },
+    {
+      "label": "Solana Agent Kit plugin",
+      "href": "https://github.com/groundtruth-now/solana-agent-kit-plugin-groundtruth"
+    },
+    {
+      "label": "Website",
+      "href": "https://groundtruths.xyz"
+    }
+  ],
+  "guide": {
+    "markdown": "# GROUNDTRUTH skill — check the record before you buy a memecoin\n\nYou are an AI agent with access to **GROUNDTRUTH**: the recorded outcomes of memecoin launches on\n**Solana (pump.fun)** and **Robinhood Chain**, and the track record of the wallets that launch them.\nUse it **before buying a newly launched token**, and whenever a user pastes a contract address (CA) or a\ncreator/deployer wallet and asks \"is this a rug?\", \"has this dev rugged before?\" or \"what happened to this coin?\".\n\nGROUNDTRUTH returns **records, not safety ratings**. Never tell a user a coin or creator is \"safe\".\nSay what was recorded: how many launches, how many rugged or died, and the chain baseline to compare against.\n\n## Connect\n\n**MCP (remote, Streamable HTTP):** `https://api.groundtruths.xyz/mcp` — official MCP Registry `xyz.groundtruths/groundtruth`.\n\n**HTTP:** base `https://api.groundtruths.xyz`\n\n| endpoint | returns | access |\n|---|---|---|\n| `GET /api/flag?addr=<creator>&chain=solana\\|rh` | known-bad verdict + its statistical basis | free, metered |\n| `GET /v1/flag?addr=<creator>` | full creator record | 5 free/IP/day, then x402 |\n| `GET /v1/record?ca=<token>` | full coin record | 5 free/IP/day, then x402 |\n\nx402 price: **$0.01 USDC per call**, on Solana mainnet or Base. Or send an API key as `x-api-key`.\n\n**Solana Agent Kit:** `npm install github:groundtruth-now/solana-agent-kit-plugin-groundtruth`\n(actions: creator record, CA record, known-bad flag; keyed or x402 from the agent's own wallet).\n\n## MCP tools\n\n- `groundtruth_scan_coin` — one token: outcome (rugged / died / graduated / active), live band, creator.\n- `groundtruth_creator_flag` — one creator: known bad or not, rug rate, chain baseline.\n- `groundtruth_screen_creator` — one creator: every wallet early in its launches, and the operator pools.\n- `groundtruth_screen_batch` — up to 200 creators in one call.\n- `groundtruth_time_to_rug` — how fast coins in a risk band actually rugged (median seconds).\n- `groundtruth_creator_replay` — what $100 would have done across a creator's last N resolved launches.\n- `groundtruth_census_figures`, `groundtruth_scoreboard`, `groundtruth_autopsy_index` — corpus figures, accuracy, autopsies.\n- `groundtruth_seal_call`, `groundtruth_scorecard` — seal a verdict before the outcome exists, then score it.\n\n## How to read the answers\n\n- **`known_bad: true`** means the creator rugs more often than the chain's baseline **by more than chance**:\n  one-sided exact binomial, p < 0.01, at least 5 resolved launches. The basis travels with every answer — quote it.\n- **`known_bad: null` / not in the set** means GROUNDTRUTH has no published record. **Absence is not innocence.**\n- The baseline is the attributed-creator population on that chain; on Solana most of those launches rug. Compare a\n  creator to the baseline, not to zero.\n- A coin launched minutes ago has no outcome yet. Say \"no outcome yet\", never \"clean\".\n- Addresses: Solana is base58, Robinhood Chain is `0x…`. Pass `chain` when the format is ambiguous.\n",
+    "executionFlow": [
+      {
+        "title": "Before a buy",
+        "content": "1. Take the token's contract address (CA) and, if known, its creator wallet.\n2. Call `groundtruth_scan_coin` (or `GET /v1/record?ca=`) for the coin's record.\n3. Call `groundtruth_creator_flag` (or `GET /api/flag?addr=`) for the creator.\n4. Report what was recorded -- launches, rugged, died, the baseline -- and the known-bad basis. Never call it safe."
+      }
+    ],
+    "landingGuidance": [
+      {
+        "title": "Access and price",
+        "content": "Remote MCP at `https://api.groundtruths.xyz/mcp`. `/v1/record` and `/v1/flag` allow 5 free calls per IP per day, then x402 at $0.01 USDC per call on Solana mainnet or Base, or send an API key as `x-api-key`. `/api/flag` (the known-bad verdict) is free and metered."
+      }
+    ],
+    "failureHandling": [
+      {
+        "title": "Reading failures",
+        "content": "- **402** -- the free calls are used: pay via x402 or add an API key.\n- **404 / not in the published set** -- no record yet. Absence is not innocence; say so.\n- **429** -- rate limited; back off.\n- A coin minutes old has no outcome yet: report 'no outcome yet', never 'clean'."
+      }
+    ]
+  }
+}
