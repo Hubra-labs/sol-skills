@@ -1,0 +1,54 @@
+{
+  "slug": "unclaimed-sol-scanner",
+  "title": "Unclaimed SOL Scanner",
+  "summary": "Read-only scan of any Solana wallet for SOL locked as rent in dormant token accounts and program buffer accounts, with consent before the wallet address is sent to the Unclaimed SOL API.",
+  "level": "beginner",
+  "tags": [
+    "wallet",
+    "rent",
+    "token-accounts",
+    "cleanup",
+    "api"
+  ],
+  "author": "Unclaimed SOL",
+  "repository": "unclaimed-sol/openclaw-skills",
+  "links": [
+    {
+      "label": "Source skill",
+      "href": "https://github.com/unclaimed-sol/openclaw-skills"
+    },
+    {
+      "label": "Unclaimed SOL",
+      "href": "https://unclaimedsol.com"
+    },
+    {
+      "label": "Fee schedule",
+      "href": "https://unclaimedsol.com/fees/"
+    },
+    {
+      "label": "Privacy policy",
+      "href": "https://blog.unclaimedsol.com/privacy-policy/"
+    }
+  ],
+  "guide": {
+    "markdown": "# Unclaimed SOL Scanner\n\nRead-only scan of a Solana wallet for SOL locked as rent in dormant token accounts and program buffer accounts, using the Unclaimed SOL API.\n\n## When to Apply\n\nUse when the user:\n- Asks about unclaimed SOL, forgotten rent, reclaimable or recoverable SOL, dead token accounts or wallet cleanup.\n- Pastes a Solana wallet address and asks what is claimable or recoverable.\n- Says \"scan wallet\", \"check claimable\", \"reclaim SOL\", \"close token accounts\" or \"recover rent\".\n\nDo not use when:\n- The user wants to sign or send a transaction. This skill never builds, signs or submits transactions; claiming happens at https://unclaimedsol.com with a connected wallet.\n- The input is a private key, seed phrase or anything other than a base58 public key.\n\n## Trusted Sources\n\n- API: `POST https://unclaimedsol.com/api/check-claimable-sol`\n- Claim site: https://unclaimedsol.com\n- Fee schedule: https://unclaimedsol.com/fees/\n- Privacy policy: https://blog.unclaimedsol.com/privacy-policy/\n\n## Privacy and Consent (required)\n\nThe scan sends the user's Solana **public key** to the Unclaimed SOL API over HTTPS. Nothing else is sent. No private keys, seed phrases or signing are involved.\n\n**Before scanning, tell the user their wallet address will be sent to unclaimedsol.com and get their confirmation.** Example:\n\n> To scan your wallet, I'll send your public address to the Unclaimed SOL API at unclaimedsol.com. No private keys are involved, only your public address. Want me to proceed?\n\n## Flow\n\n1. Get the wallet address (base58, 32-44 characters, matching `^[1-9A-HJ-NP-Za-km-z]{32,44}$`). If it does not match, ask the user to double-check it.\n2. Disclose the API call and wait for consent.\n3. Call the API:\n\n```bash\ncurl -s -f -X POST \"https://unclaimedsol.com/api/check-claimable-sol\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"publicKey\": \"<wallet_address>\"}' \\\n  --max-time 15\n```\n\n4. Treat the call as failed unless the body is JSON containing `totalClaimableSol`.\n5. Format the result as described below.\n\n## Reading the Response\n\n```json\n{\n  \"totalClaimableSol\": 4.728391,\n  \"assets\": 3.921482,\n  \"buffers\": 0.806909,\n  \"tokenCount\": 183,\n  \"bufferCount\": 3\n}\n```\n\n- `totalClaimableSol`: net SOL reclaimable (assets + buffers), after service fees.\n- `assets`: SOL from dormant token accounts (empty accounts, dead memecoins, dust).\n- `buffers`: SOL from program buffer accounts.\n- `tokenCount` / `bufferCount`: accounts to close. If both are 0 or missing, report only SOL totals, not counts.\n\nOther fields may be present; ignore any you do not need.\n\nFees: returned totals are net estimates. Standard token cleanup lets the user receive up to 0.002 SOL per account; program buffers carry a 5% fee. The canonical schedule is https://unclaimedsol.com/fees/.\n\n## Formatting\n\nShow the exact SOL value returned. Do not round (4.728391, not 4.73).\n\nIf `totalClaimableSol > 0`, report the total and break it down when both types are non-zero:\n\n> Your wallet has **4.728391 SOL** reclaimable.\n> - 3.921482 SOL from 183 token accounts\n> - 0.806909 SOL from 3 buffer accounts\n>\n> You can claim at: https://unclaimedsol.com\n\nIf only one type has value, show just the total.\n\nIf `totalClaimableSol` is 0:\n\n> This wallet has no reclaimable SOL. All accounts are active or already optimized.\n\nDo not tell the user to paste or enter the address on the website; it uses wallet connection, not a search box.\n\n## Rules\n\n- Read-only: no transactions, no keys.\n- Never ask for a seed phrase, private key or mnemonic.\n- Only accept Solana public keys.\n- Always disclose the external API call and get consent before scanning.\n",
+    "executionFlow": [
+      {
+        "title": "Scan flow",
+        "content": "1. Validate the base58 public key (32-44 characters)\n2. Tell the user the address will be sent to unclaimedsol.com and get consent\n3. POST {\"publicKey\": \"<wallet>\"} to https://unclaimedsol.com/api/check-claimable-sol\n4. Report totalClaimableSol at full precision, with the assets/buffers breakdown when both are non-zero"
+      }
+    ],
+    "landingGuidance": [
+      {
+        "title": "No transactions",
+        "content": "- This skill never builds, signs or sends transactions\n- Direct the user to https://unclaimedsol.com and its wallet connection to claim"
+      }
+    ],
+    "failureHandling": [
+      {
+        "title": "Common failures",
+        "content": "- Invalid address format: ask the user to double-check it; do not call the API\n- Network error, timeout or a response without totalClaimableSol: say the scan is unavailable right now and suggest connecting the wallet at https://unclaimedsol.com\n- Rate limited (HTTP 429): wait before retrying; do not loop"
+      }
+    ]
+  }
+}
